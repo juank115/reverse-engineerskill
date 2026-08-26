@@ -1,0 +1,24 @@
+{
+  "name": "reverse-engineering-skills",
+  "owner": {
+    "name": "juank.ai12"
+  },
+  "plugins": [
+    {
+      "name": "reverse-engineering",
+      "source": "./",
+      "description": "Beginner-friendly reverse engineering skill: guided static and dynamic analysis, disassembly, decompilation, debugging, malware triage, and firmware analysis with safe workflows.",
+      "version": "1.0.0",
+      "license": "MIT",
+      "keywords": [
+        "reverse-engineering",
+        "malware-analysis",
+        "disassembly",
+        "decompilation",
+        "debugging",
+        "firmware",
+        "security"
+      ]
+    }
+  ]
+}
