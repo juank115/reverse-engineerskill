@@ -1,5 +1,8 @@
 # Reverse Engineering Skill
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![skills.sh](https://skills.sh/b/juank115/reverse-engineerskill)](https://skills.sh/juank115/reverse-engineerskill)
+
 ![Reverse Engineering Skill — Analyze. Debug. Understand.](assets/banner.png)
 
 A beginner-friendly agent skill for analyzing binaries, malware, firmware, and obfuscated code. Works with Claude Code, OpenCode, Codex, Cursor, and [70+ other agents](https://agentskills.io) that read the standard `SKILL.md` format.
@@ -18,6 +21,21 @@ This skill teaches and guides a safe, repeatable reverse engineering workflow:
 It is designed for beginners but includes practical commands, tools, and safety practices used by professionals.
 
 ![Skill overview: binary analysis, disassembly, debugging, firmware and workflow](assets/overview.png)
+
+## What's inside the skill
+
+The skill follows the [progressive disclosure](https://agentskills.io) pattern: a concise `SKILL.md` plus resources that load only when needed.
+
+| Path | What it provides |
+|------|------------------|
+| `skills/reverse-engineering/SKILL.md` | Main workflow: safety, 6-phase analysis process, tool tables, output format |
+| `skills/reverse-engineering/references/windows-pe.md` | PE deep dive: headers, imports, packers, manual unpacking |
+| `skills/reverse-engineering/references/linux-elf.md` | ELF deep dive: headers, mitigations, GDB workflow, anti-analysis |
+| `skills/reverse-engineering/references/malware-analysis.md` | Malware playbook: lab setup, MITRE-mapped behaviors, YARA, IOCs |
+| `skills/reverse-engineering/references/firmware-iot.md` | Firmware playbook: binwalk, filesystems, emulation, UART/JTAG |
+| `skills/reverse-engineering/references/cheatsheet.md` | x64dbg, GDB, radare2, Ghidra, WinDbg command lookup |
+| `skills/reverse-engineering/scripts/triage.py` | Automated first-pass triage (hashes, entropy, sections, strings) — pure stdlib Python |
+| `skills/reverse-engineering/assets/report-template.md` | Ready-to-fill analysis report template |
 
 ## Installation
 
@@ -101,17 +119,24 @@ You can also invoke the skill directly: `/reverse-engineering` (or `/reverse-eng
 .claude-plugin/
 ├── plugin.json            # Claude Code plugin manifest (repo root is the plugin)
 └── marketplace.json       # Claude Code marketplace catalog
+.github/
+├── scripts/validate_skills.py  # Repo validation (no dependencies)
+└── workflows/validate.yml      # CI: runs validation on push/PR
 assets/
 ├── banner.png             # README banner
 └── overview.png           # README overview infographic
 skills/
 └── reverse-engineering/
-    └── SKILL.md           # The skill definition
+    ├── SKILL.md           # The skill definition
+    ├── references/        # Deep-dive guides loaded on demand
+    ├── scripts/triage.py  # Automated static triage (stdlib only)
+    └── assets/report-template.md
 examples/
 ├── static-analysis.md     # Example session: static analysis workflow
 └── dynamic-analysis.md    # Example session: dynamic analysis workflow
 install.sh                 # macOS / Linux installer
 install.ps1                # Windows installer
+CONTRIBUTING.md
 LICENSE
 README.md
 ```

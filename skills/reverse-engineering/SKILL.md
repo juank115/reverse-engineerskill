@@ -1,9 +1,11 @@
 ---
 name: reverse-engineering
-description: Use when the user wants to analyze, disassemble, debug, decompile, or understand binaries, executables, malware, firmware, or obfuscated code. Guides beginners through static analysis, dynamic analysis, reverse engineering tools, and safe malware handling.
+description: Analyze, disassemble, debug, decompile, or understand any binary, executable, DLL, malware sample, firmware image, or obfuscated/packed code. Use whenever the user mentions reverse engineering, a suspicious or unknown file, unpacking, Ghidra/IDA/radare2/x64dbg/GDB, IOCs, YARA, or asks "what does this file do" — even if they never say "reverse engineering". Guides safe static and dynamic analysis step by step, from first triage to the final report.
 license: MIT
 compatibility: claude-code, opencode, codex, cursor
 metadata:
+  author: juank.ai12
+  version: 1.1.0
   audience: beginners
   language: en
   topics: static-analysis, dynamic-analysis, malware, firmware, disassembly, debugging
@@ -19,6 +21,29 @@ This skill helps you analyze unknown binaries, executables, malware samples, fir
 - The user wants to understand how a program works without source code.
 - The user mentions disassembly, decompilation, debugging, malware, firmware, obfuscation, or unpacking.
 - The user needs help choosing tools or interpreting output from reverse engineering utilities.
+
+## Quick start: run the triage script first
+
+On any unknown file, start with the bundled triage script (read-only, pure Python, no dependencies):
+
+```bash
+python "${CLAUDE_SKILL_DIR}/scripts/triage.py" <sample>
+```
+
+If `CLAUDE_SKILL_DIR` is not set in your environment, run it from this skill's directory instead. It reports hashes, entropy, format (PE/ELF/Mach-O), sections, packer hints, and extracted strings — enough to decide the next step.
+
+## Bundled resources
+
+This skill ships supporting files. Load a reference only when the task matches its domain:
+
+| Resource | Load when... |
+|----------|--------------|
+| `references/windows-pe.md` | Analyzing Windows PE files (.exe, .dll, .sys): headers, imports, packers, manual unpacking |
+| `references/linux-elf.md` | Analyzing Linux/Unix ELF binaries: headers, symbols, GDB workflow, anti-analysis |
+| `references/malware-analysis.md` | The sample may be malicious: lab setup, unpacking tactics, MITRE-mapped behaviors, YARA |
+| `references/firmware-iot.md` | Firmware images or embedded devices: binwalk extraction, emulation, UART/JTAG |
+| `references/cheatsheet.md` | You need a specific command: x64dbg, GDB, radare2, Ghidra, WinDbg shortcuts |
+| `assets/report-template.md` | Writing the final analysis report |
 
 ## Safety first
 
@@ -185,7 +210,7 @@ For firmware images, routers, IP cameras, and embedded devices.
 
 ## Phase 6: Reporting
 
-End every session with a clear report:
+End every session with a clear report (use `assets/report-template.md` as the deliverable structure):
 
 1. **Executive summary**: what is the sample and why it matters.
 2. **Indicators of Compromise (IOCs)**: hashes, IPs, domains, file paths.
