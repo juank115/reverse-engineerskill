@@ -1,5 +1,7 @@
 # Reverse Engineering Skill
 
+![Reverse Engineering Skill — Analyze. Debug. Understand.](assets/banner.png)
+
 A beginner-friendly agent skill for analyzing binaries, malware, firmware, and obfuscated code. Works with Claude Code, OpenCode, Codex, Cursor, and [70+ other agents](https://agentskills.io) that read the standard `SKILL.md` format.
 
 ## What this skill does
@@ -14,6 +16,8 @@ This skill teaches and guides a safe, repeatable reverse engineering workflow:
 6. Reporting with IOCs and MITRE ATT&CK mapping
 
 It is designed for beginners but includes practical commands, tools, and safety practices used by professionals.
+
+![Skill overview: binary analysis, disassembly, debugging, firmware and workflow](assets/overview.png)
 
 ## Installation
 
@@ -97,6 +101,9 @@ You can also invoke the skill directly: `/reverse-engineering` (or `/reverse-eng
 .claude-plugin/
 ├── plugin.json            # Claude Code plugin manifest (repo root is the plugin)
 └── marketplace.json       # Claude Code marketplace catalog
+assets/
+├── banner.png             # README banner
+└── overview.png           # README overview infographic
 skills/
 └── reverse-engineering/
     └── SKILL.md           # The skill definition
