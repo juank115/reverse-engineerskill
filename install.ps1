@@ -72,7 +72,8 @@ function Install-Skill {
 
 Write-Host "Installing $SkillName skill..."
 Write-Host "Source: $SkillSource"
-Write-Host "Mode: $(& { if ($Copy) { 'copy' } else { 'junction' } })"
+$InstallMode = if ($Copy) { "copy" } else { "junction" }
+Write-Host "Mode: $InstallMode"
 Write-Host ""
 
 foreach ($dir in $TargetDirs) {

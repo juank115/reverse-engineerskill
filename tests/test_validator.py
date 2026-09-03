@@ -1,5 +1,6 @@
 import importlib.util
 import io
+import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -42,17 +43,58 @@ class ValidatorTests(unittest.TestCase):
         self.assertIsNone(validate_skills.SEMVER_RE.fullmatch("1.2"))
         self.assertIsNotNone(validate_skills.SEMVER_RE.fullmatch("1.2.0"))
 
+    def test_bundled_resource_validation_rejects_missing_link_target(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            skill_dir = Path(temp_dir)
+            with redirect_stdout(io.StringIO()):
+                validate_skills.validate_bundled_resources(
+                    skill_dir,
+                    "Use [missing guide](references/missing.md).",
+                )
+
+        self.assertTrue(
+            any("targets missing file" in error for error in validate_skills.errors)
+        )
+
+    def test_bundled_resource_validation_rejects_unlisted_file(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            skill_dir = Path(temp_dir)
+            references = skill_dir / "references"
+            references.mkdir()
+            (references / "unlisted.md").write_text("# Unlisted\n", encoding="utf-8")
+            with redirect_stdout(io.StringIO()):
+                validate_skills.validate_bundled_resources(skill_dir, "No links here.")
+
+        self.assertTrue(
+            any("is not linked with Markdown" in error for error in validate_skills.errors)
+        )
+
     def test_version_symmetry_rejects_a_marketplace_mismatch(self):
         with redirect_stdout(io.StringIO()):
             validate_skills.validate_version_symmetry(
-                {"reverse-engineering": "1.2.0"},
-                {"name": "reverse-engineering", "version": "1.2.0"},
-                {"plugins": [{"name": "reverse-engineering", "version": "1.1.0"}]},
+                {"reverse-engineering": "9.8.7"},
+                {"name": "reverse-engineering", "version": "9.8.7"},
+                {"plugins": [{"name": "reverse-engineering", "version": "9.8.6"}]},
             )
 
         self.assertTrue(
             any("version mismatch" in error for error in validate_skills.errors)
         )
+
+    def test_marketplace_catalog_name_may_differ_from_plugin_name(self):
+        with redirect_stdout(io.StringIO()):
+            validate_skills.validate_version_symmetry(
+                {"reverse-engineering": "9.8.7"},
+                {"name": "reverse-engineering", "version": "9.8.7"},
+                {
+                    "name": "reverse-engineering-skills",
+                    "plugins": [
+                        {"name": "reverse-engineering", "version": "9.8.7"}
+                    ],
+                },
+            )
+
+        self.assertEqual(validate_skills.errors, [])
 
 
 if __name__ == "__main__":

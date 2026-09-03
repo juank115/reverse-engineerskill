@@ -208,7 +208,7 @@ def validate_json(path: Path, required: list[str]) -> dict | None:
 def validate_version_symmetry(
     skill_versions: dict[str, str], plugin: dict | None, marketplace: dict | None
 ) -> None:
-    """Require one matching semantic version across skill and plugin metadata."""
+    """Match plugin identity inside the catalog, then require version symmetry."""
     if plugin is None or marketplace is None:
         return
 

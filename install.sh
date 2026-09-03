@@ -64,7 +64,12 @@ install_skill() {
 
 echo "Installing ${SKILL_NAME} skill..."
 echo "Source: ${SKILL_SOURCE}"
-echo "Mode: $([[ ${USE_COPY} == true ]] && echo copy || echo symlink)"
+if [[ "${USE_COPY}" == true ]]; then
+    INSTALL_MODE="copy"
+else
+    INSTALL_MODE="symlink"
+fi
+echo "Mode: ${INSTALL_MODE}"
 echo ""
 
 if [[ -r /proc/version ]] && grep -qi microsoft /proc/version; then

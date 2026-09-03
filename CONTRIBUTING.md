@@ -41,3 +41,5 @@ When you change skill content, bump the same semantic `version` in all three loc
 - the `reverse-engineering` plugin entry in `.claude-plugin/marketplace.json`
 
 The repository validator runs in CI and fails if any version is missing, invalid, or different from the other two.
+
+The top-level `name` in `.claude-plugin/marketplace.json` identifies the marketplace catalog (`reverse-engineering-skills`) and may differ from the plugin name. Plugin identity is the `name` in `.claude-plugin/plugin.json`, which must match exactly one entry in `marketplace.json`'s `plugins` array (`reverse-engineering`). The validator checks that identity before comparing versions.

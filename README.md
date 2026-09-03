@@ -55,7 +55,7 @@ npx skills add juank115/reverse-engineerskill --skill reverse-engineering -g -y
 npx skills add juank115/reverse-engineerskill --skill reverse-engineering -y
 
 # Target specific agents
-npx skills add juank115/reverse-engineerskill --skill reverse-engineering -g -a claude-code -a opencode
+npx skills add juank115/reverse-engineerskill --skill reverse-engineering -g -a claude-code -a opencode -y
 ```
 
 ### Option 2: Claude Code plugin (official)
@@ -82,6 +82,8 @@ Clone this repository and run the installer for your platform. It links (or copi
 ```
 
 The installer asks before overwriting an existing skill. Run `install.sh` in macOS, Linux, Git Bash, or WSL; it resolves the repository with native POSIX paths. Under WSL it installs into the **WSL user's** agent directories, even when the clone is under `/mnt/c`. To install for native Windows agents, run `install.ps1` from PowerShell instead.
+
+The bundled Python triage and repository validation scripts require Python 3.10 or newer and use only the standard library.
 
 ### Option 4: Manual install
 
@@ -151,7 +153,7 @@ README.md
 
 ## Safety notice
 
-This skill is a guide. It does **not** execute malware for you. It requires explicit verification of VM isolation, rollback, network containment, monitoring, and secret-free conditions before giving or using commands that run or debug an unknown sample. Never run suspicious executables on your host.
+This skill is a guide. It does **not execute the analyzed sample** during static triage: `triage.py` is the program being run, and it opens the target file as read-only bytes without importing or launching it. Dynamic-analysis commands are different; the skill requires explicit verification of VM isolation, rollback, network containment, monitoring, and secret-free conditions before giving or using commands that run or debug an unknown sample. Never run suspicious executables on your host.
 
 ## License
 

@@ -1,11 +1,11 @@
 ---
 name: reverse-engineering
-description: Analyze, disassemble, debug, decompile, or understand any binary, executable, DLL, malware sample, firmware image, or obfuscated/packed code. Use whenever the user mentions reverse engineering, a suspicious or unknown file, unpacking, Ghidra/IDA/radare2/x64dbg/GDB, IOCs, YARA, or asks "what does this file do" — even if they never say "reverse engineering". Guides safe static and dynamic analysis step by step, from first triage to the final report.
+description: Safely analyze, disassemble, decompile, or debug unknown binaries, executables, DLLs, malware, firmware, and packed or obfuscated code. Use for reverse engineering, suspicious-file triage, unpacking, Ghidra/IDA/radare2/x64dbg/GDB help, IOC extraction, YARA, or questions about what a binary does.
 license: MIT
 compatibility: claude-code, opencode, codex, cursor
 metadata:
   author: juank.ai12
-  version: 1.2.0
+  version: 1.2.1
   audience: beginners
   language: en
   topics: static-analysis, dynamic-analysis, malware, firmware, disassembly, debugging

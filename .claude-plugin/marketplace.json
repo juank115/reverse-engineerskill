@@ -8,7 +8,7 @@
       "name": "reverse-engineering",
       "source": "./",
       "description": "Beginner-friendly reverse engineering skill: guided static and dynamic analysis, disassembly, decompilation, debugging, malware triage, and firmware analysis with safe workflows.",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "license": "MIT",
       "keywords": [
         "reverse-engineering",
