@@ -2,6 +2,10 @@
 
 Analyzing firmware images and embedded devices: routers, cameras, DVRs, printers, smart gadgets.
 
+Firmware / IoT is a conditional domain track within the six phases in `SKILL.md`, not a separate phase. Acquisition and extraction support triage/static analysis; native binaries move through disassembly; emulation is dynamic analysis; device observations are behavioral analysis.
+
+Before any emulation command, execution of an extracted binary, or live hardware connection, complete the mandatory execution gate in `SKILL.md`. If isolation, snapshot/rollback, networking, authorization, or safe voltage is unconfirmed, remain with read-only image extraction and static inspection.
+
 ## Contents
 
 - [Acquisition](#acquisition)
@@ -63,7 +67,7 @@ Prioritized hunting list:
 
 ## Emulation
 
-Run binaries without the device:
+After the execution gate is verified, run binaries without the device inside the isolated analysis environment:
 
 ```bash
 # Identify architecture first

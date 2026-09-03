@@ -5,7 +5,7 @@ license: MIT
 compatibility: claude-code, opencode, codex, cursor
 metadata:
   author: juank.ai12
-  version: 1.1.0
+  version: 1.2.0
   audience: beginners
   language: en
   topics: static-analysis, dynamic-analysis, malware, firmware, disassembly, debugging
@@ -24,13 +24,13 @@ This skill helps you analyze unknown binaries, executables, malware samples, fir
 
 ## Quick start: run the triage script first
 
-On any unknown file, start with the bundled triage script (read-only, pure Python, no dependencies):
+On any unknown file, start with the [bundled triage script](scripts/triage.py) (read-only, pure Python, no dependencies):
 
 ```bash
 python "${CLAUDE_SKILL_DIR}/scripts/triage.py" <sample>
 ```
 
-If `CLAUDE_SKILL_DIR` is not set in your environment, run it from this skill's directory instead. It reports hashes, entropy, format (PE/ELF/Mach-O), sections, packer hints, and extracted strings — enough to decide the next step.
+If `CLAUDE_SKILL_DIR` is not set in your environment, run it from this skill's directory instead. It reports hashes, entropy, format (PE/ELF/Mach-O), sections, packer hints, possible anti-analysis indicators, and extracted strings — enough to decide the next step. Treat every heuristic as a lead to verify, not proof of malicious behavior.
 
 ## Bundled resources
 
@@ -38,36 +38,59 @@ This skill ships supporting files. Load a reference only when the task matches i
 
 | Resource | Load when... |
 |----------|--------------|
-| `references/windows-pe.md` | Analyzing Windows PE files (.exe, .dll, .sys): headers, imports, packers, manual unpacking |
-| `references/linux-elf.md` | Analyzing Linux/Unix ELF binaries: headers, symbols, GDB workflow, anti-analysis |
-| `references/malware-analysis.md` | The sample may be malicious: lab setup, unpacking tactics, MITRE-mapped behaviors, YARA |
-| `references/firmware-iot.md` | Firmware images or embedded devices: binwalk extraction, emulation, UART/JTAG |
-| `references/cheatsheet.md` | You need a specific command: x64dbg, GDB, radare2, Ghidra, WinDbg shortcuts |
-| `assets/report-template.md` | Writing the final analysis report |
+| [`references/windows-pe.md`](references/windows-pe.md) | Analyzing Windows PE files (.exe, .dll, .sys): headers, imports, packers, manual unpacking |
+| [`references/linux-elf.md`](references/linux-elf.md) | Analyzing Linux/Unix ELF binaries: headers, symbols, GDB workflow, anti-analysis |
+| [`references/malware-analysis.md`](references/malware-analysis.md) | The sample may be malicious: lab setup, unpacking tactics, MITRE-mapped behaviors, YARA |
+| [`references/firmware-iot.md`](references/firmware-iot.md) | Firmware images or embedded devices: binwalk extraction, emulation, UART/JTAG |
+| [`references/cheatsheet.md`](references/cheatsheet.md) | You need a specific command: x64dbg, GDB, radare2, Ghidra, WinDbg shortcuts |
+| [`references/static-analysis-example.md`](references/static-analysis-example.md) | A beginner needs a complete static-analysis example |
+| [`references/dynamic-analysis-example.md`](references/dynamic-analysis-example.md) | A beginner needs a complete isolated dynamic-analysis example |
+| [`scripts/triage.py`](scripts/triage.py) | Running read-only first-pass triage |
+| [`assets/report-template.md`](assets/report-template.md) | Writing the final analysis report |
 
-## Safety first
+## Safety first: mandatory execution gate
 
-Reverse engineering can involve malicious code. Never run unknown executables on a host machine.
+Reverse engineering can involve malicious code. **Never run or debug an unknown executable on the host machine.** Static inspection is allowed on the host when the tooling only reads the sample.
 
-1. **Isolate everything**: use a dedicated virtual machine (VM) or sandbox for dynamic analysis.
-2. **No network by default**: disconnect the analysis VM from the internet unless you explicitly need it.
-3. **Snapshot first**: take a VM snapshot before running any sample.
-4. **Handle with hashes**: identify files by SHA-256 and search them in VirusTotal, MalwareBazaar, or Hybrid Analysis before execution.
-5. **Ask before running**: if the user asks you to execute a binary, confirm the risk and environment first.
-6. **No credential reuse**: never use production passwords, keys, or tokens inside an analysis VM.
+Before providing or executing any command that starts a sample, continues a debugger, steps through an unpacking stub, emulates firmware, or connects live hardware, you **MUST verify every applicable item** with the user:
+
+- [ ] Execution will occur in a dedicated, disposable analysis VM or sandbox, not on the host. Shared folders, shared clipboard, drag-and-drop, and host credential integration are disabled.
+- [ ] A clean snapshot exists and can be restored after analysis.
+- [ ] Networking is disabled or attached only to an isolated fake-net. It is not bridged to a home, corporate, or production network.
+- [ ] Monitoring tools are installed and started before the sample.
+- [ ] The environment contains no production credentials, personal data, tokens, or trusted devices.
+- [ ] For physical firmware work, the device is owned or authorized, isolated from trusted networks, and connected with verified voltage and safe hardware practices.
+
+Ask for explicit confirmation when these facts are not already established. If any applicable item is unconfirmed, **stop at phases 1–3** and offer read-only triage, static analysis, or disassembly only. A warning alone does not satisfy this gate.
+
+Identify files by SHA-256 before execution. Hash lookups are read-only; uploading the sample itself to a public analysis service requires the user's permission because the file may become public.
 
 ## Beginner's reverse engineering workflow
 
-Always follow this order unless there is a good reason to skip ahead:
+Use the same six phases for ordinary binaries, suspected malware, and firmware. Skip an inapplicable phase only when you state why:
 
 1. **Triage**: identify file type, architecture, packing, and entropy.
 2. **Static analysis**: read strings, headers, imports, and metadata without executing.
 3. **Disassembly / decompilation**: convert machine code to readable form.
-4. **Dynamic analysis**: run under controlled observation in a sandbox/VM.
-5. **Behavioral analysis**: record network, filesystem, registry, and process activity.
+4. **Dynamic analysis**: after the execution gate, run or emulate under controlled observation.
+5. **Behavioral analysis**: record network, filesystem, registry, process, or device activity.
 6. **Reporting**: summarize findings with IOCs, MITRE ATT&CK mappings, and recommendations.
 
-## Phase 1: Triage & static analysis
+Firmware / IoT is a **conditional domain track, not a seventh phase or a replacement for phase 5**. When the input is firmware or an embedded device, load `references/firmware-iot.md` and apply its acquisition, extraction, architecture, emulation, and hardware guidance within the six phases above. For example, extraction belongs to phases 1–2, native-code review to phase 3, emulation to phase 4, and observed device behavior to phase 5.
+
+## Choose the right tool depth
+
+Start with the lowest-complexity tool that answers the question, then move deeper only when the evidence requires it.
+
+| Level | Start with | Move here when... |
+|-------|------------|-------------------|
+| Beginner / first pass | Bundled `triage.py`, `file`, `strings`, Detect It Easy, PE-bear | You need format, hashes, strings, sections, or packer clues |
+| Guided visual analysis | Ghidra, IDA Free, Cutter; Procmon/System Informer after the execution gate | You need cross-references, decompilation, or observable runtime behavior |
+| Advanced / manual work | radare2, GDB with gef/pwndbg, WinDbg, x64dbg unpacking, Scylla/IAT repair | Simpler tools cannot explain control flow, anti-analysis, or a packed payload |
+
+Do not make manual unpacking or IAT repair the beginner's default. Explain the goal of each advanced command and the expected observable result before using it.
+
+## Phase 1: Triage
 
 Start here for every sample.
 
@@ -86,6 +109,12 @@ Run on the host or a safe analysis VM:
 - Few imports combined with large `.text` or `.data` sections suggest a packer.
 - Look for section names like `UPX0`, `UPX1`, `.vmp`, `.themida`, `.petite`.
 
+The bundled script highlights known packer section names, high-entropy or writable-executable sections, and possible anti-debugging, timing, or virtualization strings. Confirm these leads in later phases; they can appear in legitimate software.
+
+## Phase 2: Static analysis
+
+Inspect strings, headers, imports, exports, metadata, resources, and signatures without executing the sample.
+
 ### Useful static tools
 
 | Tool | Purpose |
@@ -100,7 +129,7 @@ Run on the host or a safe analysis VM:
 | `capstone` (Python) | Lightweight disassembly |
 | `yara` | Rule-based pattern matching |
 
-## Phase 2: Disassembly & decompilation
+## Phase 3: Disassembly & decompilation
 
 Use these tools depending on budget and platform:
 
@@ -120,37 +149,39 @@ Use these tools depending on budget and platform:
 - Trace user input (network, files, registry, command line) to dangerous APIs.
 - Search for suspicious API calls: `CreateRemoteThread`, `VirtualAllocEx`, `InternetOpenUrl`, `RegSetValueEx`, `WriteProcessMemory`.
 
-## Phase 3: Dynamic analysis & debugging
+## Phase 4: Dynamic analysis & debugging
 
-Only run samples in an isolated VM.
+Do not enter this phase until the mandatory execution gate is fully verified.
 
-### Before execution
+### Before execution (MUST verify all applicable items)
 
-1. Take a VM snapshot.
-2. Disable network or route through an isolated fake-net.
-3. Prepare monitoring tools.
+- [ ] Dedicated, disposable VM or sandbox confirmed; host integrations disabled.
+- [ ] Clean snapshot taken.
+- [ ] Network disabled or routed only through an isolated fake-net.
+- [ ] Monitoring selected from the table below, installed, and started.
+- [ ] No real credentials, sensitive data, or trusted devices are exposed.
 
 ### Monitoring tools
 
-| Tool | Platform | What it records |
-|------|----------|-----------------|
-| **Procmon** | Windows | Registry, file, process events |
-| **Process Hacker / System Informer** | Windows | Processes, memory, handles |
-| **Wireshark** | Cross-platform | Network traffic |
-| **strace / ltrace** | Linux | Syscalls and library calls |
-| **x64dbg / WinDbg** | Windows | Live debugging |
-| **GDB** | Linux | Live debugging |
+| Tool | Platform | What it records | Safety requirement |
+|------|----------|-----------------|--------------------|
+| **Procmon** | Windows | Registry, file, process events | Start inside the verified VM before sample execution |
+| **Process Hacker / System Informer** | Windows | Processes, memory, handles | Use only inside the verified VM for an unknown sample |
+| **Wireshark** | Cross-platform | Network traffic | Capture only the isolated VM/fake-net interface, never a trusted LAN |
+| **strace / ltrace** | Linux | Syscalls and library calls | These tools execute the sample; the verified VM is mandatory |
+| **x64dbg / WinDbg** | Windows | Live debugging | Loading/continuing may execute code; the verified VM is mandatory |
+| **GDB** | Linux | Live debugging | Starting/continuing may execute code; the verified VM is mandatory |
 
-### Debugging checklist
+### Debugging checklist (only after the gate)
 
 - Set breakpoints on suspicious APIs.
-- Step through unpacking stubs if packed.
+- Step through unpacking stubs if packed, inside the verified VM only.
 - Dump unpacked payloads from memory when safe.
 - Record the full command-line arguments and environment variables.
 
-## Phase 4: Behavioral analysis (malware)
+## Phase 5: Behavioral analysis
 
-If the sample is potentially malicious, document behavior systematically.
+Document observed behavior systematically. For suspected malware, load `references/malware-analysis.md`; for firmware, record services, filesystem changes, device interfaces, and network behavior using `references/firmware-iot.md`.
 
 ### Persistence mechanisms
 
@@ -183,30 +214,6 @@ If the sample is potentially malicious, document behavior systematically.
 - Network indicators.
 - Mutexes / event names.
 - Dropped filenames.
-
-## Phase 5: Firmware / IoT analysis
-
-For firmware images, routers, IP cameras, and embedded devices.
-
-### Extraction
-
-- `binwalk -e <firmware.bin>` — extract filesystems.
-- `binwalk -M <firmware.bin>` — recursive extraction.
-- `firmadyne` — emulate firmware for dynamic analysis.
-- `fatcat` / `unsquashfs` — inspect SquashFS images.
-
-### Static inspection
-
-- Identify OS (often Linux-based) and architecture (MIPS, ARM, x86).
-- Look at `/etc/passwd`, startup scripts (`rcS`, `init`), and crontabs.
-- Search for hardcoded credentials, backdoors, and debug shells.
-
-### Hardware basics
-
-- UART is the most common debug interface (look for 4-pin headers).
-- Use a USB-to-TTL adapter at 3.3 V.
-- JTAG is less common but powerful for deep analysis.
-- Never connect unknown hardware to a trusted network.
 
 ## Phase 6: Reporting
 

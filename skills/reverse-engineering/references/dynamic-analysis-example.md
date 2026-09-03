@@ -6,13 +6,17 @@ This example shows how to analyze a binary by executing it safely inside an isol
 
 > I have a malware sample in my VM. How do I observe what it does when it runs?
 
-## Prerequisites
+## Mandatory execution gate
 
-The user must confirm:
+Before giving any run, continue, step, or debugger command, the user must confirm:
 
-- Analysis is running inside an isolated VM.
-- A snapshot was taken before execution.
-- Network is disabled or routed through a fake-net.
+- [ ] Analysis is running inside a dedicated, disposable VM with host integrations disabled.
+- [ ] A clean snapshot was taken before execution.
+- [ ] Network is disabled or routed only through an isolated fake-net.
+- [ ] Monitoring tools are installed and already started.
+- [ ] The VM contains no production credentials, personal data, or tokens.
+
+If any item is unconfirmed, stop and offer static analysis instead.
 
 ## Expected skill behavior
 
@@ -24,10 +28,10 @@ On Windows:
 
 - Start **Procmon** and filter by process name.
 - Start **Process Hacker** or **System Informer**.
-- Start **Wireshark** if network observation is needed.
+- Start **Wireshark** on the isolated VM/fake-net interface if network observation is needed; never capture or expose a trusted LAN.
 - Prepare **x64dbg** if live debugging is planned.
 
-On Linux:
+On Linux, these commands execute the sample and are allowed only after the gate is verified:
 
 ```bash
 sudo strace -f -o sample.strace ./sample

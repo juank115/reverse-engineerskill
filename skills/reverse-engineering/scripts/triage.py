@@ -13,8 +13,9 @@ Reports:
     - Overall entropy (packing/encryption indicator)
     - Format: PE, ELF, Mach-O, or unknown
     - PE: architecture, type, section table with per-section entropy,
-      suspicious section names (known packers)
+      suspicious section names (known packers), and section anomalies
     - ELF: class, endianness, architecture, type
+    - Possible anti-analysis string indicators for supported formats
     - Top printable ASCII and UTF-16LE strings
 """
 
@@ -41,6 +42,25 @@ PACKER_SECTIONS = {
     b".nsp0": "NsPack", b".nsp1": "NsPack", b".neolite": "NeoLite",
     b".packed": "generic packer", b".boom": "Boomerang", b".y0da": "y0da crypter",
 }
+
+ANTI_ANALYSIS_PATTERNS = {
+    "debugger detection": (
+        "IsDebuggerPresent", "CheckRemoteDebuggerPresent",
+        "NtQueryInformationProcess", "ptrace", "TracerPid",
+        "/proc/self/status",
+    ),
+    "timing evasion": (
+        "QueryPerformanceCounter", "GetTickCount64", "NtDelayExecution",
+        "clock_gettime", "rdtsc",
+    ),
+    "virtualization or sandbox detection": (
+        "VBoxGuest", "VBoxService", "VirtualBox", "vmtoolsd", "VMware",
+        "Sandboxie", "SbieDll", "QEMU",
+    ),
+}
+
+PE_SECTION_MEM_EXECUTE = 0x20000000
+PE_SECTION_MEM_WRITE = 0x80000000
 
 PE_MACHINES = {
     0x014C: "x86 (32-bit)", 0x8664: "x86-64", 0x01C0: "ARM",
@@ -100,6 +120,26 @@ def utf16le_strings(data: bytes, min_len: int) -> list[str]:
     return found
 
 
+def detect_anti_analysis(data: bytes) -> list[dict[str, object]]:
+    """Find conservative anti-analysis string clues without claiming intent."""
+    lowered = data.lower()
+    indicators: list[dict[str, object]] = []
+    for category, patterns in ANTI_ANALYSIS_PATTERNS.items():
+        evidence = []
+        for pattern in patterns:
+            ascii_pattern = pattern.encode("ascii").lower()
+            utf16_pattern = pattern.encode("utf-16le").lower()
+            if ascii_pattern in lowered or utf16_pattern in lowered:
+                evidence.append(pattern)
+        if evidence:
+            indicators.append({
+                "category": category,
+                "evidence": evidence,
+                "note": "string evidence only; confirm through code or runtime behavior",
+            })
+    return indicators
+
+
 def parse_pe(data: bytes) -> dict:
     """Minimal PE parser: headers + section table. No third-party deps."""
     info: dict = {"format": "PE"}
@@ -134,15 +174,34 @@ def parse_pe(data: bytes) -> dict:
         if off + 40 > len(data):
             break
         name = data[off:off + 8].rstrip(b"\x00")
-        _vsize, _vaddr, raw_size, raw_ptr = struct.unpack_from("<IIII", data, off + 8)
+        virtual_size, _vaddr, raw_size, raw_ptr = struct.unpack_from("<IIII", data, off + 8)
+        section_characteristics = struct.unpack_from("<I", data, off + 36)[0]
         raw = data[raw_ptr:raw_ptr + raw_size] if raw_ptr < len(data) else b""
         sec_entropy = entropy(raw)
         packer = PACKER_SECTIONS.get(name.lower())
+        is_writable_executable = bool(
+            section_characteristics & PE_SECTION_MEM_EXECUTE
+            and section_characteristics & PE_SECTION_MEM_WRITE
+        )
+        zero_raw_large_virtual = raw_size == 0 and virtual_size >= 4096
+        notes = []
+        if packer:
+            notes.append(f"known packer/protector section: {packer}")
+        if sec_entropy > 7.0:
+            notes.append("high entropy")
+        if is_writable_executable:
+            notes.append("writable + executable")
+        if zero_raw_large_virtual:
+            notes.append("zero raw data + large virtual size")
         sections.append({
             "name": name.decode("ascii", errors="replace") or "(unnamed)",
+            "virtual_size": virtual_size,
             "raw_size": raw_size,
             "entropy": round(sec_entropy, 2),
             "packer_hint": packer or ("high entropy" if sec_entropy > 7.0 else None),
+            "writable_executable": is_writable_executable,
+            "zero_raw_large_virtual": zero_raw_large_virtual,
+            "notes": notes,
         })
     info["sections"] = sections
     return info
@@ -169,6 +228,7 @@ def parse_macho(data: bytes) -> dict:
 
 def triage(path: Path, max_strings: int, min_len: int) -> dict:
     data = path.read_bytes()
+    overall_entropy = entropy(data)
     report: dict = {
         "file": str(path),
         "size_bytes": len(data),
@@ -177,8 +237,8 @@ def triage(path: Path, max_strings: int, min_len: int) -> dict:
             "sha1": hashlib.sha1(data).hexdigest(),
             "sha256": hashlib.sha256(data).hexdigest(),
         },
-        "entropy": round(entropy(data), 2),
-        "entropy_note": "high — likely packed/encrypted" if entropy(data) > 7.0 else "normal",
+        "entropy": round(overall_entropy, 2),
+        "entropy_note": "high — possibly packed/encrypted" if overall_entropy > 7.0 else "normal",
     }
 
     if data[:2] == b"MZ":
@@ -190,6 +250,33 @@ def triage(path: Path, max_strings: int, min_len: int) -> dict:
     else:
         report["format"] = "unknown / data"
 
+    report["anti_analysis_indicators"] = detect_anti_analysis(data)
+
+    warnings = []
+    if overall_entropy > 7.0:
+        warnings.append("High overall entropy may indicate packing or encryption.")
+    for section in report.get("sections", []):
+        section_name = section["name"]
+        if section.get("packer_hint") and section["packer_hint"] != "high entropy":
+            warnings.append(
+                f"Section {section_name!r} matches {section['packer_hint']} naming."
+            )
+        if section.get("entropy", 0.0) > 7.0:
+            warnings.append(f"Section {section_name!r} has high entropy.")
+        if section.get("writable_executable"):
+            warnings.append(f"Section {section_name!r} is writable and executable.")
+        if section.get("zero_raw_large_virtual"):
+            warnings.append(
+                f"Section {section_name!r} has no raw data but a large virtual size; "
+                "it may receive unpacked code at runtime."
+            )
+    for indicator in report["anti_analysis_indicators"]:
+        evidence = ", ".join(indicator["evidence"])
+        warnings.append(
+            f"Possible {indicator['category']} strings found: {evidence}. "
+            "Confirm in code before drawing conclusions."
+        )
+    report["warnings"] = warnings
     report["ascii_strings"] = ascii_strings(data, min_len)[:max_strings]
     report["utf16le_strings"] = utf16le_strings(data, min_len)[:max_strings]
     return report
@@ -213,8 +300,20 @@ def print_report(report: dict) -> None:
         print("\nSections:")
         print(f"  {'Name':10s} {'Raw size':>10s} {'Entropy':>7s}  Note")
         for sec in report["sections"]:
-            note = sec.get("packer_hint") or ""
+            note = "; ".join(sec.get("notes") or [])
             print(f"  {sec['name']:10s} {sec['raw_size']:>10,} {sec['entropy']:>7.2f}  {note}")
+
+    indicators = report.get("anti_analysis_indicators") or []
+    if indicators:
+        print("\nPossible anti-analysis indicators (verify; strings are not proof):")
+        for indicator in indicators:
+            print(f"  {indicator['category']}: {', '.join(indicator['evidence'])}")
+
+    warnings = report.get("warnings") or []
+    if warnings:
+        print("\nTriage warnings:")
+        for warning in warnings:
+            print(f"  - {warning}")
 
     for key, label in (("ascii_strings", "ASCII"), ("utf16le_strings", "UTF-16LE")):
         strings = report.get(key) or []
@@ -223,8 +322,9 @@ def print_report(report: dict) -> None:
             for s in strings:
                 print(f"  {s[:120]}")
 
-    print("\nNext steps: search the SHA-256 on VirusTotal/MalwareBazaar; "
-          "if packed (high entropy + packer hint), see references/cheatsheet.md for unpacking.")
+    print("\nNext steps: verify the warnings with static analysis and search the SHA-256 "
+          "on VirusTotal/MalwareBazaar. Do not execute the sample until the mandatory "
+          "isolation gate in SKILL.md is confirmed.")
 
 
 def main() -> int:

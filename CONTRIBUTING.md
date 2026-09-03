@@ -23,7 +23,10 @@ Thanks for improving this skill. A few guidelines keep it useful and loadable ev
 # Validate skill structure and manifests (no dependencies needed)
 python .github/scripts/validate_skills.py
 
-# Sanity-check the triage script still runs
+# Run the triage and validator regression tests
+python -m unittest discover -s tests -v
+
+# Optional manual sanity check
 python skills/reverse-engineering/scripts/triage.py skills/reverse-engineering/SKILL.md
 ```
 
@@ -31,7 +34,10 @@ The GitHub Action runs the same validation on every push and PR.
 
 ## Versioning
 
-When you change skill content, bump `version` in both places:
+When you change skill content, bump the same semantic `version` in all three locations:
 
 - `skills/reverse-engineering/SKILL.md` frontmatter (`metadata.version`)
-- `.claude-plugin/plugin.json` and the plugin entry in `.claude-plugin/marketplace.json`
+- `.claude-plugin/plugin.json`
+- the `reverse-engineering` plugin entry in `.claude-plugin/marketplace.json`
+
+The repository validator runs in CI and fails if any version is missing, invalid, or different from the other two.

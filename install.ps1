@@ -25,17 +25,18 @@ param(
 $ErrorActionPreference = "Stop"
 
 $SkillName = "reverse-engineering"
-$RepoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$SkillSource = Join-Path $RepoRoot "skills\$SkillName"
+$RepoRoot = (Resolve-Path -LiteralPath (Split-Path -Parent $MyInvocation.MyCommand.Path)).Path
+$SkillsRoot = Join-Path $RepoRoot "skills"
+$SkillSource = Join-Path $SkillsRoot $SkillName
 
 if (-not (Test-Path $SkillSource -PathType Container)) {
     throw "Skill source directory not found at: $SkillSource"
 }
 
 $TargetDirs = @(
-    (Join-Path $env:USERPROFILE ".claude\skills"),
-    (Join-Path $env:USERPROFILE ".config\opencode\skills"),
-    (Join-Path $env:USERPROFILE ".agents\skills")
+    (Join-Path (Join-Path $env:USERPROFILE ".claude") "skills"),
+    (Join-Path (Join-Path (Join-Path $env:USERPROFILE ".config") "opencode") "skills"),
+    (Join-Path (Join-Path $env:USERPROFILE ".agents") "skills")
 )
 
 function Install-Skill {
@@ -45,11 +46,11 @@ function Install-Skill {
 
     $TargetPath = Join-Path $TargetDir $SkillName
 
-    if (-not (Test-Path $TargetDir)) {
+    if (-not (Test-Path -LiteralPath $TargetDir)) {
         New-Item -ItemType Directory -Path $TargetDir -Force | Out-Null
     }
 
-    if (Test-Path $TargetPath) {
+    if (Test-Path -LiteralPath $TargetPath) {
         if (-not $Force) {
             $answer = Read-Host "$TargetPath already exists. Replace? [y/N]"
             if ($answer -notmatch '^[Yy]$') {
@@ -57,11 +58,11 @@ function Install-Skill {
                 return
             }
         }
-        Remove-Item $TargetPath -Recurse -Force
+        Remove-Item -LiteralPath $TargetPath -Recurse -Force
     }
 
     if ($Copy) {
-        Copy-Item -Path $SkillSource -Destination $TargetPath -Recurse
+        Copy-Item -LiteralPath $SkillSource -Destination $TargetPath -Recurse
         Write-Host "Copied skill to $TargetPath"
     } else {
         New-Item -ItemType Junction -Path $TargetPath -Target $SkillSource | Out-Null

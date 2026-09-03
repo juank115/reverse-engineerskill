@@ -6,14 +6,29 @@
 
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 SKILL_NAME="reverse-engineering"
 SKILL_SOURCE="${REPO_ROOT}/skills/${SKILL_NAME}"
 
-USE_COPY=false
-if [[ "${1:-}" == "--copy" ]]; then
-    USE_COPY=true
+if [[ -d "${SKILL_SOURCE}" ]] && command -v realpath >/dev/null 2>&1; then
+    SKILL_SOURCE="$(realpath "${SKILL_SOURCE}")"
 fi
+
+USE_COPY=false
+for arg in "$@"; do
+    case "${arg}" in
+        --copy) USE_COPY=true ;;
+        -h|--help)
+            echo "Usage: ./install.sh [--copy]"
+            echo "Installs into the current Unix/WSL user's agent directories."
+            exit 0
+            ;;
+        *)
+            echo "Error: unknown option: ${arg}" >&2
+            exit 2
+            ;;
+    esac
+done
 
 if [[ ! -d "${SKILL_SOURCE}" ]]; then
     echo "Error: skill source directory not found at ${SKILL_SOURCE}"
@@ -51,6 +66,12 @@ echo "Installing ${SKILL_NAME} skill..."
 echo "Source: ${SKILL_SOURCE}"
 echo "Mode: $([[ ${USE_COPY} == true ]] && echo copy || echo symlink)"
 echo ""
+
+if [[ -r /proc/version ]] && grep -qi microsoft /proc/version; then
+    echo "WSL detected: targets below belong to the WSL user, not native Windows."
+    echo "For native Windows agents, run .\\install.ps1 from PowerShell instead."
+    echo ""
+fi
 
 install_skill "${HOME}/.claude/skills"
 install_skill "${HOME}/.config/opencode/skills"

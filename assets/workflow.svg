@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="360" viewBox="0 0 1440 360" role="img" aria-labelledby="title desc">
+  <title id="title">Reverse engineering six-phase workflow</title>
+  <desc id="desc">Triage, static analysis, disassembly, dynamic analysis, behavioral analysis, and reporting. Firmware and malware are conditional domains that use the same phases.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07111d"/>
+      <stop offset="1" stop-color="#101827"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#56d9ff"/>
+    </marker>
+    <style>
+      .title { fill: #f8fafc; font: 700 28px system-ui, sans-serif; letter-spacing: 1px; }
+      .subtitle { fill: #94a3b8; font: 16px system-ui, sans-serif; }
+      .number { fill: #07111d; font: 700 16px system-ui, sans-serif; }
+      .card-title { fill: #f8fafc; font: 700 16px system-ui, sans-serif; }
+      .card-copy { fill: #b8c4d6; font: 13px system-ui, sans-serif; }
+      .domain-title { fill: #c4b5fd; font: 700 15px system-ui, sans-serif; }
+      .domain-copy { fill: #cbd5e1; font: 14px system-ui, sans-serif; }
+    </style>
+  </defs>
+  <rect width="1440" height="360" rx="18" fill="url(#bg)"/>
+  <text x="42" y="52" class="title">SAFE REVERSE ENGINEERING WORKFLOW</text>
+  <text x="42" y="80" class="subtitle">One sequence for binaries, suspected malware, and firmware</text>
+
+  <g transform="translate(42 112)">
+    <rect width="190" height="104" rx="12" fill="#0f2235" stroke="#56d9ff" stroke-width="1.5"/>
+    <circle cx="25" cy="25" r="15" fill="#56d9ff"/><text x="25" y="31" text-anchor="middle" class="number">1</text>
+    <text x="48" y="30" class="card-title">TRIAGE</text>
+    <text x="18" y="62" class="card-copy">Format · hashes</text><text x="18" y="83" class="card-copy">architecture · entropy</text>
+  </g>
+  <path d="M 238 164 H 260" stroke="#56d9ff" stroke-width="2" marker-end="url(#arrow)"/>
+  <g transform="translate(268 112)">
+    <rect width="190" height="104" rx="12" fill="#0f2235" stroke="#56d9ff" stroke-width="1.5"/>
+    <circle cx="25" cy="25" r="15" fill="#56d9ff"/><text x="25" y="31" text-anchor="middle" class="number">2</text>
+    <text x="48" y="30" class="card-title">STATIC</text>
+    <text x="18" y="62" class="card-copy">Strings · headers</text><text x="18" y="83" class="card-copy">imports · metadata</text>
+  </g>
+  <path d="M 464 164 H 486" stroke="#56d9ff" stroke-width="2" marker-end="url(#arrow)"/>
+  <g transform="translate(494 112)">
+    <rect width="190" height="104" rx="12" fill="#0f2235" stroke="#56d9ff" stroke-width="1.5"/>
+    <circle cx="25" cy="25" r="15" fill="#56d9ff"/><text x="25" y="31" text-anchor="middle" class="number">3</text>
+    <text x="48" y="30" class="card-title">DISASSEMBLY</text>
+    <text x="18" y="62" class="card-copy">Control flow</text><text x="18" y="83" class="card-copy">decompilation</text>
+  </g>
+  <path d="M 690 164 H 712" stroke="#56d9ff" stroke-width="2" marker-end="url(#arrow)"/>
+  <g transform="translate(720 112)">
+    <rect width="190" height="104" rx="12" fill="#18203a" stroke="#a78bfa" stroke-width="1.5"/>
+    <circle cx="25" cy="25" r="15" fill="#a78bfa"/><text x="25" y="31" text-anchor="middle" class="number">4</text>
+    <text x="48" y="30" class="card-title">DYNAMIC</text>
+    <text x="18" y="62" class="card-copy">Mandatory safety gate</text><text x="18" y="83" class="card-copy">before execution</text>
+  </g>
+  <path d="M 916 164 H 938" stroke="#56d9ff" stroke-width="2" marker-end="url(#arrow)"/>
+  <g transform="translate(946 112)">
+    <rect width="190" height="104" rx="12" fill="#18203a" stroke="#a78bfa" stroke-width="1.5"/>
+    <circle cx="25" cy="25" r="15" fill="#a78bfa"/><text x="25" y="31" text-anchor="middle" class="number">5</text>
+    <text x="48" y="30" class="card-title">BEHAVIOR</text>
+    <text x="18" y="62" class="card-copy">Files · processes</text><text x="18" y="83" class="card-copy">network · device</text>
+  </g>
+  <path d="M 1142 164 H 1164" stroke="#56d9ff" stroke-width="2" marker-end="url(#arrow)"/>
+  <g transform="translate(1172 112)">
+    <rect width="226" height="104" rx="12" fill="#102b28" stroke="#5ee6a8" stroke-width="1.5"/>
+    <circle cx="25" cy="25" r="15" fill="#5ee6a8"/><text x="25" y="31" text-anchor="middle" class="number">6</text>
+    <text x="48" y="30" class="card-title">REPORTING</text>
+    <text x="18" y="62" class="card-copy">Findings · IOCs</text><text x="18" y="83" class="card-copy">MITRE · recommendations</text>
+  </g>
+
+  <rect x="42" y="254" width="1356" height="70" rx="12" fill="#17172b" stroke="#7c6dd8"/>
+  <text x="66" y="283" class="domain-title">CONDITIONAL DOMAIN TRACKS</text>
+  <text x="66" y="308" class="domain-copy">Firmware / IoT: acquisition · extraction · architecture · emulation · hardware</text>
+  <text x="760" y="308" class="domain-copy">Malware: lab controls · behaviors · IOCs · MITRE ATT&amp;CK</text>
+</svg>

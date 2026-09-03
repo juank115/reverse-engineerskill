@@ -66,7 +66,7 @@ ent invoice.exe                  # entropy check
 pecheck invoice.exe              # if available
 ```
 
-If entropy is high (>7.5) and imports are few, the binary is likely packed.
+If entropy is high (>7.0) and imports are few, the binary may be packed; verify with section names, imports, and a packer detector.
 
 ## Sample report output
 

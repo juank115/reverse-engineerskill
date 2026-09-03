@@ -2,6 +2,16 @@
 
 Quick command lookup. Load this when the user needs a specific command or shortcut.
 
+## Choose a level
+
+| Level | Prefer | Use it for |
+|-------|--------|------------|
+| Beginner | Bundled `triage.py`, `file`, `strings`, Detect It Easy, PE-bear | First-pass facts and packer clues |
+| Guided visual | Ghidra, IDA Free, Cutter; Procmon after the execution gate | Cross-references, decompilation, and monitored behavior |
+| Advanced | radare2, GDB/gef/pwndbg, WinDbg, x64dbg, Scylla | Manual control-flow work, anti-analysis, unpacking, and IAT repair |
+
+Start at the first level and move deeper only when needed. Commands that run or continue a target (`start`, `c`, `ood`, `dc`, `g`, `F9`, debugger stepping, and similar) are **dynamic execution**. For an unknown sample, do not provide or use them until the mandatory execution gate in `SKILL.md` is fully verified. Explain an advanced command's goal and expected result before asking a beginner to use it.
+
 ## Contents
 
 - [x64dbg](#x64dbg)
